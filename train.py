@@ -16,7 +16,7 @@ from zoo.feature.common import FeatureSet
 from zoo.pipeline.api.keras.metrics import Accuracy
 
 from conf import settings
-from utils import get_network, get_training_dataloader, get_test_dataloader, WarmUpLR
+from utils import get_network, get_training_dataloader, get_test_dataloader
 
 import torch.nn as nn
 
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     zoo_lrSchedule = SequentialSchedule(iter_per_epoch)
     zoo_lrSchedule.add(Warmup(warmup_delta), iter_per_epoch * args.warm)
     zoo_lrSchedule.add(MultiStep([iter_per_epoch * 60, iter_per_epoch * 120, iter_per_epoch * 160], 0.2), iter_per_epoch * 200)
-    zoo_optim = SGD(learningrate=warmup_delta, learningrate_decay=0.0, weightdecay=5e-4,
+    zoo_optim = SGD(learningrate=0.0, learningrate_decay=0.0, weightdecay=5e-4,
                 momentum=0.9, dampening=0.0, nesterov=False,
                 leaningrate_schedule=zoo_lrSchedule)
 
@@ -89,7 +89,6 @@ if __name__ == '__main__':
     zoo_estimator = Estimator(zoo_model, optim_methods=zoo_optim)
     train_featureset = FeatureSet.pytorch_dataloader(cifar100_training_loader)
     test_featureset = FeatureSet.pytorch_dataloader(cifar100_test_loader)
-    from bigdl.optim.optimizer import MaxEpoch, EveryEpoch
     zoo_estimator.train_minibatch(train_featureset, zoo_loss,
                                   end_trigger=MaxEpoch(settings.EPOCH),
                                   checkpoint_trigger=EveryEpoch(),
